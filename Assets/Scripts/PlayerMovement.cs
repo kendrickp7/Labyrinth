@@ -7,27 +7,50 @@ public class PlayerMovement : MonoBehaviour
     public float speed = 5f;
     public float jumpforce = 5f;
     Rigidbody rb;
-    // Start is called before the first frame update
+
+    public Transform mainCam;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody>();
     }
 
-    // Update is called once per frame
+    
     void Update()
-{
-    if (Input.GetKeyDown(KeyCode.Space))
     {
-        rb.AddForce(Vector3.up * jumpforce, ForceMode.Impulse);
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            rb.AddForce(Vector3.up * jumpforce, ForceMode.Impulse);
+        }
     }
-}
     void FixedUpdate()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float moveX = Input.GetAxis("Horizontal");
+        float moveZ = Input.GetAxis("Vertical");
 
-        Vector3 move = new Vector3(h, 0f, v) * speed;
-        rb.velocity = new Vector3(move.x, rb.velocity.y, move.z);
+        
+        Vector3 camForward = mainCam.forward;
+        camForward.y = 0f;
+        camForward.Normalize();
 
+        Vector3 camRight = mainCam.right;
+        camRight.y = 0f;
+        camRight.Normalize();
+
+        
+        Vector3 movement = (camForward * moveZ + camRight * moveX).normalized;
+
+        
+        if (movement.magnitude > 0.1f)
+        {
+            float targetY = Mathf.Atan2(movement.x, movement.z) * Mathf.Rad2Deg;
+            Quaternion targetRotation = Quaternion.Euler(0f, targetY, 0f);
+            rb.MoveRotation(targetRotation);
+        }
+
+        
+        Vector3 moveForce = movement * speed;
+        rb.velocity = new Vector3(moveForce.x, rb.velocity.y, moveForce.z);
     }
 }
+
